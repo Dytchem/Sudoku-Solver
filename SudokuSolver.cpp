@@ -102,7 +102,13 @@ void dfs(int o=0){
 
 int main(){
 	P p=init();
-	if (p.x!=-1) return cout<<"\n输入数独不合规！\n错误在：行"<<p.x+1<<" 列"<<p.y+1<<" 数"<<p.w,0;
+	if (p.x!=-1){
+		cout<<"\n输入数独不合规！\n错误在：行"<<p.x+1<<" 列"<<p.y+1<<" 数"<<p.w<<'\n';
+		cout<<"\n按回车键以结束程序……    ";
+		getchar();
+		getchar();
+		return 0;
+	}
 
 	max_num=1000; 
 	//freopen("answer.txt","w",stdout);
