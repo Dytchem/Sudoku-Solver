@@ -23,13 +23,14 @@ struct P {
 int a[9][9];
 P blk[81];
 int tot = 0;
-int row[9], col[9], cel[3][3];
+int row[9], col[9], cel[3][3];  // 状态压缩
+int Log2[1 << 12];
 
-inline int get(const P& p) {
+inline int get(const P& p) {  // 位运算
     return row[p.x] | col[p.y] | cel[p.x / 3][p.y / 3];
 }
 
-inline void flip(const P& p, int n) {
+inline void flip(const P& p, int n) {  // 位运算
     a[p.x][p.y] ^= n;
     row[p.x] ^= 1 << n;
     col[p.y] ^= 1 << n;
@@ -37,6 +38,9 @@ inline void flip(const P& p, int n) {
 }
 
 inline P init() {
+    for (int i = 1; i < 12; ++i)
+        Log2[(1 << i) - 1] = i - 1;
+
     P re{-1};
     char c;
     for (int i = 0; i < 9; ++i) {
@@ -59,7 +63,6 @@ inline P init() {
             blk[i].w += (all >> j) & 1;
         }
     }
-    sort(blk, blk + tot);
 
     if (re.x != -1)
         return re;
@@ -89,22 +92,36 @@ inline void finish() {
     exit(0);
 }
 
+inline void Sort(int o) {  // 启发式排序
+    for (int i = o; i < tot; ++i) {
+        const int all = get(blk[i]);
+        blk[i].w = 0;
+        for (int j = 1; j <= 9; ++j) {
+            blk[i].w += (all >> j) & 1;
+        }
+    }
+    sort(blk + o, blk + tot);
+}
+
+bool isSort[81];
 int num = 0, max_num = 5;
 
-void dfs(int o = 0) {
+void dfs(int o = 0) {  // DFS
     if (num == max_num)
         return;
-    if (o == tot) {
+    if (o == tot) {  // 答案数量截断
         ++num;
         cout << "\n<答案" << num << ">\n";
         show();
         return;
     }
+    if (!isSort[o]) {  // 启发式排序
+        isSort[o] = true;
+        Sort(o);
+    }
     const P& p = blk[o];
-    const int all = get(p);
-    for (int i = 1; i <= 9; ++i) {
-        if ((all >> i) & 1)
-            continue;
+    int all = get(p) | 1;
+    for (int i = Log2[all ^ (all + 1)]; i <= 9; all |= 1 << i, i = Log2[all ^ (all + 1)]) {  // 位运算 剪枝
         flip(p, i);
         dfs(o + 1);
         flip(p, i);
