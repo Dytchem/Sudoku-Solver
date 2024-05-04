@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdio> 
 #include <cmath>
 #include <algorithm>
 #include <chrono>
@@ -71,6 +72,10 @@ inline void finish(){
 	chrono::time_point<chrono::high_resolution_clock> end=chrono::high_resolution_clock::now();
 	chrono::duration<double> duration=end-start;
 	cout<<"\n用时："<<ceil(duration.count()*1000)<<" ms"<<endl;
+	
+	cout<<"\n按回车键以结束程序……    ";
+	getchar();
+	getchar();
 	exit(0);
 }
 
