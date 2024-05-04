@@ -3,10 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
-
 using namespace std;
-
-chrono::time_point<chrono::high_resolution_clock> start;
 
 struct P {
     int x, y, w;
@@ -24,7 +21,7 @@ int a[9][9];
 P blk[81];
 int tot = 0;
 int row[9], col[9], cel[3][3];  // 状态压缩
-int Log2[1 << 12];
+int Log2[1 << 11];
 
 inline int get(const P& p) {  // 位运算
     return row[p.x] | col[p.y] | cel[p.x / 3][p.y / 3];
@@ -37,11 +34,11 @@ inline void flip(const P& p, int n) {  // 位运算
     cel[p.x / 3][p.y / 3] ^= 1 << n;
 }
 
-inline P init() {
-    for (int i = 1; i < 12; ++i)
-        Log2[(1 << i) - 1] = i - 1;
+inline void init() {
+    for (int i = 1; i < 11; ++i)
+        Log2[1 << i] = i;
 
-    P re{-1};
+    P f{-1};
     char c;
     for (int i = 0; i < 9; ++i) {
         for (int j = 0; j < 9; ++j) {
@@ -49,7 +46,7 @@ inline P init() {
             cin >> c;
             c -= '0';
             if ((get(p) >> c) & 1)
-                re = P{i, j, c};
+                f = P{i, j, c};
             if (c)
                 flip(p, c);
             else
@@ -57,19 +54,13 @@ inline P init() {
         }
     }
 
-    for (int i = 0; i < tot; ++i) {
-        const int all = get(blk[i]);
-        for (int j = 1; j <= 9; ++j) {
-            blk[i].w += (all >> j) & 1;
-        }
+    if (f.x != -1) {
+        cout << "\n输入数独不合规！\n错误在：行" << f.x + 1 << " 列" << f.y + 1 << " 数" << f.w << '\n';
+        cout << "\n按回车键以结束程序……    ";
+        getchar();
+        getchar();
+        exit(0);
     }
-
-    if (re.x != -1)
-        return re;
-    cout << "\n初始化完成！计时开始……\n";
-    start = chrono::high_resolution_clock::now();
-
-    return re;
 }
 
 inline void show() {
@@ -81,30 +72,18 @@ inline void show() {
     }
 }
 
-inline void finish() {
-    chrono::time_point<chrono::high_resolution_clock> end = chrono::high_resolution_clock::now();
-    chrono::duration<double> duration = end - start;
-    cout << "\n用时：" << ceil(duration.count() * 1000) << " ms" << endl;
-
-    cout << "\n按回车键以结束程序……    ";
-    getchar();
-    getchar();
-    exit(0);
-}
-
 inline void Sort(int o) {  // 启发式排序
     for (int i = o; i < tot; ++i) {
-        const int all = get(blk[i]);
+        int all = get(blk[i]);
         blk[i].w = 0;
-        for (int j = 1; j <= 9; ++j) {
-            blk[i].w += (all >> j) & 1;
-        }
+        for (int j = Log2[all & -all]; j; all ^= 1 << j, j = Log2[all & -all])
+            blk[i].w++;
     }
     sort(blk + o, blk + tot);
 }
 
 bool isSort[81];
-int num = 0, max_num = 5;
+int num = 0, max_num;
 
 void dfs(int o = 0) {  // DFS
     if (num == max_num)
@@ -120,8 +99,8 @@ void dfs(int o = 0) {  // DFS
         Sort(o);
     }
     const P& p = blk[o];
-    int all = get(p) | 1;
-    for (int i = Log2[all ^ (all + 1)]; i <= 9; all |= 1 << i, i = Log2[all ^ (all + 1)]) {  // 位运算 剪枝
+    int all = ~(get(p) | 1);
+    for (int i = Log2[all & -all]; i <= 9; all ^= 1 << i, i = Log2[all & -all]) {  // 位运算 剪枝
         flip(p, i);
         dfs(o + 1);
         flip(p, i);
@@ -129,14 +108,9 @@ void dfs(int o = 0) {  // DFS
 }
 
 int main() {
-    P p = init();
-    if (p.x != -1) {
-        cout << "\n输入数独不合规！\n错误在：行" << p.x + 1 << " 列" << p.y + 1 << " 数" << p.w << '\n';
-        cout << "\n按回车键以结束程序……    ";
-        getchar();
-        getchar();
-        return 0;
-    }
+    init();
+    cout << "\n初始化完成！计时开始……\n";
+    auto start = chrono::high_resolution_clock::now();
 
     max_num = 1000;
     // freopen("answer.txt","w",stdout);
@@ -148,7 +122,14 @@ int main() {
         cout << "\n部分求解完成！（答案数量上限为" << max_num << "）\n";
     else
         cout << "\n求解完成！\n";
-    finish();
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    cout << "\n用时：" << ceil(duration.count() * 1000) << " ms" << endl;
+
+    cout << "\n按回车键以结束程序……    ";
+    getchar();
+    getchar();
 
     return 0;
 }
