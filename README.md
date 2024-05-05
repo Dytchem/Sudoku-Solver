@@ -8,7 +8,7 @@
 
 虽然没有用舞蹈十字链算法，但效率几乎可以与其媲美！！！
 
-（详见：[洛谷评测记录](https://www.luogu.com.cn/record/158037918)）
+（详见：[洛谷评测记录](https://www.luogu.com.cn/record/158037918)、[51nod评测记录](https://www.51nod.com/Challenge/ProblemSubmitDetail.html#judgeId=1714813)）
 
 ## 示例
 - 世界上最难的数独
