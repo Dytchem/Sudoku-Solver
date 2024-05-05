@@ -74,18 +74,20 @@ inline void show() {
 
 inline void Sort(int o) {  // 启发式排序
     for (int i = o; i < tot; ++i) {
-        int all = get(blk[i]);
-        blk[i].w = 0;
-        for (int j = Log2[all & -all]; j; all ^= 1 << j, j = Log2[all & -all])
-            blk[i].w++;
+        P& p = blk[i];
+        const int all = get(p);
+        p.w = -all;
+        for (int j = 1; j <= 9; ++j)
+            p.w += (((all >> j) & 1) << 20) | (((row[p.x] >> j) & 1) + ((col[p.y] >> j) & 1) + ((cel[p.x / 3][p.y / 3] >> j) & 1));
     }
     sort(blk + o, blk + tot);
 }
 
 bool isSort[81];
-int num = 0, max_num;
+int num = 0, max_num, dfs_num = 0;
 
 void dfs(int o = 0) {  // DFS
+    ++dfs_num;
     if (num == max_num)
         return;
     if (o == tot) {  // 答案数量截断
@@ -125,7 +127,8 @@ int main() {
 
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
-    cout << "\n用时：" << ceil(duration.count() * 1000) << " ms" << endl;
+    cout << "\n用时：" << ceil(duration.count() * 1000) << " ms";
+    cout << "\n搜索次数：" << dfs_num << endl;
 
     cout << "\n按回车键以结束程序……    ";
     getchar();
